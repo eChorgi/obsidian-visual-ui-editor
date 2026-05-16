@@ -1,6 +1,7 @@
 # Visual UI Editor
-[简体中文](#Simplified-Chinese) [繁體中文](#Traditional-Chinese)
-A plugin that helps you visually select and modify any UI element.
+[English](#English) [简体中文](#Simplified-Chinese) [繁體中文](#Traditional-Chinese)
+<br>
+<span  id="English">A plugin that helps you visually select and modify any UI element. </span>
 
 ## How to use
 

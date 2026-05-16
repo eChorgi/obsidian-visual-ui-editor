@@ -23,7 +23,7 @@ export default class VisualUIEditorPlugin extends Plugin {
         });
 
 
-        this.addRibbonIcon('target', t('ribbon.tooltip'), () => {
+        this.addRibbonIcon('square-mouse-pointer', t('ribbon.tooltip'), () => {
             new MultiSelectorInstance(this.app, this);
         });
 

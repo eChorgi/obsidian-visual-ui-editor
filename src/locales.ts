@@ -16,8 +16,8 @@ export const resources = {
             "console": {
                 "get_system_font_error": "Failed to get system font. Details: ",
                 "copy_failed": "Copy failed. Details: ",
-                "generate_selector_failed": "Failed to generate selector for element. Details: "
-
+                "generate_selector_failed": "Failed to generate selector for element. Details: ",
+                "selected_svg": "Selected no supported SVG element"
             },
             "font": {
                 "default_option": "View system fonts"
@@ -321,7 +321,10 @@ export const resources = {
                 "priority": {
                     "name": "Priority",
                     "tooltip": "When multiple styles apply to the same element, styles with higher priority will override those with lower priority.",
-                    "force": "Force",
+                    "toggle": {
+                        "on": "Force",
+                        "off": "Normal"
+                    }
                 },
                 "erase_styles": {
                     "name": "Erase",
@@ -339,7 +342,11 @@ export const resources = {
                 "preview": {
                     "name": "Preview",
                     "tooltip": "Apply the current styles directly to the document for preview (will be lost after refreshing or closing the window)",
-                    "notice": "✅Applied\nTemporary CSS file path: {{filePath}}"
+                    "notice": "✅Applied\nTemporary CSS file path: {{filePath}}",
+                    "toggle": {
+                        "on": "Live",
+                        "off": "Click"
+                    }
                 },
                 "save_styles": {
                     "name": "Save",
@@ -369,7 +376,8 @@ export const resources = {
             "console": {
                 "get_system_font_error": "获取系统字体失败，详情: ",
                 "copy_failed": "复制失败，详情: ",
-                "generate_selector_failed": "生成元素选择器失败，详情: "
+                "generate_selector_failed": "生成元素选择器失败，详情: ",
+                "selected_svg": "选中了不受支持的SVG元素"
             },
             "font": {
                 "default_option": "查看系统字体"
@@ -652,10 +660,13 @@ export const resources = {
                 "priority": {
                     "name": "覆盖权重",
                     "tooltip": "当多个样式作用于同一元素时，权重更高的样式会覆盖权重较低的样式。默认权重为1，数值越大优先级越高。",
-                    "force": "强制"
+                    "toggle": {
+                        "on": "强制",
+                        "off": "普通"
+                    }
                 },
                 "erase_styles": {
-                    "name": "抹除样式",
+                    "name": "抹除",
                     "tooltip": "抹除所有该元素设置过的历史样式，恢复到未设置状态。",
                     "confirm": "确定要抹除所有该元素设置过的 [历史] 样式吗？\n该元素将恢复为没有设置过任何样式的状态, 该操作无法撤销！",
                     "notice": "✅已抹除该元素的历史样式",
@@ -668,9 +679,13 @@ export const resources = {
                     "notice": "✅已重置本次编辑的样式"
                 },
                 "preview": {
-                    "name": "文档预览",
+                    "name": "预览",
                     "tooltip": "将当前样式直接应用到文档中进行预览（刷新或关闭窗口后失效）",
-                    "notice": "已应用✅\n临时css文件路径: {{filePath}}"
+                    "notice": "已应用✅\n临时css文件路径: {{filePath}}",
+                    "toggle": {
+                        "on": "实时",
+                        "off": "点击"
+                    }
                 },
                 "save_styles": {
                     "name": "保存",
@@ -699,7 +714,8 @@ export const resources = {
             "console": {
                 "get_system_font_error": "獲取繫統字體失敗，詳情: ",
                 "copy_failed": "複製失敗，詳情: ",
-                "generate_selector_failed": "生成元素選擇器失敗，詳情: "
+                "generate_selector_failed": "生成元素選擇器失敗，詳情: ",
+                "selected_svg": "選中了不受支持的SVG元素"
             },
             "font": {
                 "default_option": "查看繫統字體"
@@ -982,10 +998,13 @@ export const resources = {
                 "priority": {
                     "name": "覆蓋權重",
                     "tooltip": "當多個樣式作用於同一元素時，權重更高的樣式會覆蓋權重較低的樣式。默認權重爲1，數值越大優先級越高。",
-                    "force": "強製"
+                    "toggle": {
+                        "on": "強制",
+                        "off": "普通"
+                    }
                 },
                 "erase_styles": {
-                    "name": "抹除樣式",
+                    "name": "抹除",
                     "tooltip": "抹除所有該元素設置過的曆史樣式，恢複到未設置狀態。",
                     "confirm": "確定要抹除所有該元素設置過的 [曆史] 樣式嗎？\n該元素將恢複爲沒有設置過任何樣式的狀態, 該操作無法撤銷！",
                     "notice": "✅已抹除該元素的曆史樣式",
@@ -998,9 +1017,13 @@ export const resources = {
                     "notice": "✅已重置本次編輯的樣式"
                 },
                 "preview": {
-                    "name": "文檔預覽",
+                    "name": "預覽",
                     "tooltip": "將當前樣式直接應用到文檔中進行預覽（刷新或關閉窗口後失效）",
-                    "notice": "已應用✅\n臨時css文件路徑: {{filePath}}"
+                    "notice": "已應用✅\n臨時css文件路徑: {{filePath}}",
+                    "toggle": {
+                        "on": "實時",
+                        "off": "點擊"
+                    }
                 },
                 "save_styles": {
                     "name": "保存",

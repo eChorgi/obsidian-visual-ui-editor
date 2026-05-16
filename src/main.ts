@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, Setting, ColorComponent, Modal, getLanguage } from 'obsidian';
+import { App, Plugin, Notice, Setting, ColorComponent, Modal, getLanguage, ButtonComponent } from 'obsidian';
 import { UISetting } from './types';
 
 import i18next from 'i18next';
@@ -158,7 +158,7 @@ class AttributeEditItem {
     public parentItem?: AttributeEditItem;
     public subContainer!: HTMLDivElement; // 用于存放子属性的容器
     public inputEl!: HTMLInputElement; // 仅 text 类型使用
-    private onUpdate: (() => void) | null = null; // 用于监听属性更新的回调函数
+    private onUpdate: (() => void) | (() => Promise<void>) | null = null; // 用于监听属性更新的回调函数
     private onReset: (() => void) | null = null; // 用于监听重置的回调函数
 
     //导出css
@@ -398,7 +398,7 @@ class AttributeEditItem {
             });
         }
         if(this.onUpdate) {
-            this.onUpdate();
+            void this.onUpdate();
         }
     }
 
@@ -413,7 +413,7 @@ class AttributeEditItem {
         this.setProp(this.orginValue);
         this.currentValue = undefined;
     }
-    public addListenerOnUpdate(callback: () => void) {
+    public addListenerOnUpdate(callback: () => void | Promise<void>) {
         this.onUpdate = callback;
         this.subItems.forEach(subItem => {
             subItem.addListenerOnUpdate(this.onUpdate!);
@@ -802,7 +802,10 @@ class CSSInspectorFloatingPanel{
     private selectorHint!: HTMLDivElement; // 显示当前选择器的提示元素
     private styleEl!: HTMLStyleElement; // 用于注入样式的 <style> 标签
     private isImportant: boolean = false; // 是否使用 !important 来提高优先级
+    private isPreviewing: boolean = true; // 是否实时预览样式
+    private previewButton!: ButtonComponent; // 切换预览的按钮
     private target_style!: CSSStyleDeclaration; // 当前元素的计算样式对象
+    private transformPos = { x: 0, y: 0 }; 
     get pseudo() {
         return this.selectorInstance.pseudo;
     }
@@ -881,14 +884,20 @@ class CSSInspectorFloatingPanel{
             position: 'fixed',
             top: '100px',
             right: '100px',
-            width: '560px',
+            
+            width: '600px',
             // height: '600px',
             zIndex: '40',
             backgroundColor: 'var(--background-primary)',
             border: '1px solid var(--background-modifier-border)',
             borderRadius: '8px',
             boxShadow: 'var(--shadow-l)',
-            display: 'flex',
+            display: 'inline-flex',
+            flexShrink: '0',
+            alignSelf: 'flex-start',
+            // width: 'max-content',
+            height: 'auto',
+            // padding: '12px',
             flexDirection: 'column',
             maxHeight: '80vh',
             overflow: 'hidden'
@@ -900,29 +909,41 @@ class CSSInspectorFloatingPanel{
         handle.classList.add('visual-ui-editor-title')
         // 拖拽逻辑 (使用箭头函数自动绑定 this)
         handle.onmousedown = (e) => {
-            this.isDragging = true;
-            this.offset.x = e.clientX - this.el.offsetLeft;
-            this.offset.y = e.clientY - this.el.offsetTop;
-            handle.classList.add('is-dragging');
+    this.isDragging = true;
+    handle.classList.add('is-dragging');
+    
+    // 关键改变：直接记录鼠标按下时的绝对坐标
+    const startX = e.clientX;
+    const startY = e.clientY;
+    
+    // 记录按下那一刻，元素已经具备的位移量
+    const initialX = this.transformPos.x;
+    const initialY = this.transformPos.y;
+    
+    const onMouseMove = (e: MouseEvent) => {
+        if (!this.isDragging) return;
+            // 计算鼠标移动的“净差值”
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
             
+            // 累计位移量 = 初始位移 + 移动差值
+            this.transformPos.x = initialX + deltaX;
+            this.transformPos.y = initialY + deltaY;
             
-            // 增加全局监听，防止鼠标滑出面板后断开
-            const onMouseMove = (e: MouseEvent) => {
-                if (!this.isDragging) return;
-                this.el.style.left = `${e.clientX - this.offset.x}px`;
-                this.el.style.top = `${e.clientY - this.offset.y}px`;
-            };
-
-            const onMouseUp = () => {
-                this.isDragging = false;
-                handle.classList.remove('is-dragging');
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            };
-
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            // 使用 transform 进行平移，100% 免疫 Flex 布局影响，且丝滑不掉帧
+            this.el.style.transform = `translate3d(${this.transformPos.x}px, ${this.transformPos.y}px, 0)`;
         };
+
+        const onMouseUp = () => {
+            this.isDragging = false;
+            handle.classList.remove('is-dragging');
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+    };
 
         
         // --- 内容区域 ---
@@ -1346,16 +1367,47 @@ class CSSInspectorFloatingPanel{
         this.attributeEditors.forEach(editor => editor.createElement());
 
         this.attributeEditors.forEach(editor => editor.addListenerOnUpdate(
-            () => {
+            async () => {
+                if (this.isPreviewing) {
+                    const css = this.exportCSS(this.priority, this.isImportant);
+                    // 获取 snippets 文件夹路径
+                    const snippetsPath = this.app.vault.configDir + '/snippets';
+                    if (!(await this.app.vault.adapter.exists(snippetsPath))) {
+                        await this.app.vault.adapter.mkdir(snippetsPath);
+                    }
+                    const snippetName = `--ui-designer-${this.app.vault.getName()}-temp`;
+                    const snippetFile = `${snippetsPath}/${snippetName}.css`;
+                    let content = '';
+                    content = '/* -- This file is generated by the visual-ui-editor plugin automatically -- */\n';
+
+                    const cssContent = `${content}\n${css}`;
+
+                    await this.app.vault.adapter.write(snippetFile, cssContent);
+                    const customCss = this.app.customCss;
+
+                    await customCss.readSnippets();
+
+                    // 2. 检查是否在启用列表中
+                    const isEnabled = customCss.enabledSnippets.has(snippetName);
+
+                    if (isEnabled) {
+                        // 3. 如果已启用，通过“开关一次”来强制浏览器重绘样式
+                        await customCss.setCssEnabledStatus(snippetName, false);
+                        await customCss.setCssEnabledStatus(snippetName, true);
+                    } else {
+                        // 4. 如果未启用，直接开启
+                        await customCss.setCssEnabledStatus(snippetName, true);
+                    }
+                }
                 this.style = this.exportStyle(this.isImportant);
                 if(this.style.endsWith("\t")) {
                     this.style = this.style.slice(0, -1);
                 }
                 if(this.style === '') {
-                    this.selectorHint.textContent = `[@selector]/ 点击复制选择器\n${this.selector}\n`;
+                    this.selectorHint.textContent = t('preview.selector_hint', { selector: this.selector });
                 }
                 else {
-                    this.selectorHint.textContent = `[@css-preview]/ 点击复制css代码\n${this.selector}\n{\n\t${this.style}}`;
+                    this.selectorHint.textContent = t('preview.css_hint', { selector: this.selector, css: this.style });
                 }
             }
         )); // 初始化时同步一次预览
@@ -1376,25 +1428,26 @@ class CSSInspectorFloatingPanel{
 
                 // 2. 创建显示容器 (Stack)
                 const displayStack = setting.controlEl.createDiv({ cls: 'value-display-stack' });
-                Object.assign(displayStack.style, {
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'end',
-                    width: '60px',
-                    marginRight: '10px'
-                });
 
                 // 3. 创建显示文本 (Span)
                 const valueDisplay = displayStack.createEl('span', {
                     text: String(currentWeight),
-                    cls: 'visual-ui-editor-value-display-label'
+                    cls: 'value-display-label'
                 });
 
                 // 4. 创建隐藏输入框 (Input)
                 const valueInput = displayStack.createEl('input', {
                     type: 'number',
-                    cls: ['visual-ui-editor-value-input', 'visual-ui-editor-hidden']
+                    cls: ['value-display-input', 'visual-ui-editor-hidden']
                 });         
+                Object.assign(valueInput.style, {
+                    width: "30px",
+                    position: "absolute",
+                    paddingLeft: "5px",
+                });
+                Object.assign(valueDisplay.style, {
+                    position: "absolute",
+                });
 
                 // 5. 添加原生 Slider
                 setting
@@ -1411,20 +1464,20 @@ class CSSInspectorFloatingPanel{
                             toggle
                             .setValue(this.isImportant) // 设置初始状态
                             const statusText = toggle.toggleEl.createEl('span', { 
-                                text: t('action_bar.priority.force'),
+                                text: t('action_bar.priority.toggle.off'),
                                 cls: 'visual-ui-editor-important-status-text'
                             });
                             
                             toggle.onChange(value => {
                                 this.isImportant = value;
-                                statusText.setText(t('action_bar.priority.force'));
+                                statusText.setText((value ? t('action_bar.priority.toggle.on') : t('action_bar.priority.toggle.off')));  
                                 statusText.classList.toggle('important', value);
                                 this.style = this.exportStyle(this.isImportant);
                                 if(this.style.endsWith("\t")) {
                                     this.style = this.style.slice(0, -1);
                                 }
                                 if(this.style === '') {
-                                    this.selectorHint.textContent = t('preview.selector_hint');
+                                    this.selectorHint.textContent = t('preview.selector_hint', { selector: this.selector });
                                 }
                                 else {
                                     this.selectorHint.textContent = t('preview.css_hint', { selector: this.selector, css: this.style });
@@ -1598,7 +1651,6 @@ class CSSInspectorFloatingPanel{
                 }
             }))
 
-
             .addButton(btn => btn
             .setButtonText(t('action_bar.preview.name'))
             .setTooltip(t('action_bar.preview.tooltip'))
@@ -1634,7 +1686,39 @@ class CSSInspectorFloatingPanel{
                 }
                 // customCss.setCssEnabledStatus(snippetName, true)
                 new Notice(t('action_bar.preview.notice', { filePath: snippetFile }));
-            }))
+            })
+            .then(btn => this.previewButton = btn)
+            )
+            .addToggle(toggle => {
+                toggle
+                .setValue(this.isPreviewing) // 设置初始状态
+                const statusText = toggle.toggleEl.createEl('span', { 
+                    text: t('action_bar.preview.toggle.on'),
+                    cls: 'visual-ui-editor-preview-status-text'
+                });
+                statusText.classList.toggle('on', this.isPreviewing);
+                this.previewButton.setDisabled(this.isPreviewing);
+                
+                toggle.onChange(value => {
+                    this.isPreviewing = value;
+                    this.previewButton.setDisabled(this.isPreviewing);
+                    statusText.setText(value ? t('action_bar.preview.toggle.on') : t('action_bar.preview.toggle.off'));
+                    statusText.classList.toggle('on', value);
+                    statusText.classList.toggle('on', value);
+                    this.style = this.exportStyle(this.isPreviewing);
+                    if(this.style.endsWith("\t")) {
+                        this.style = this.style.slice(0, -1);
+                    }
+                    if(this.style === '') {
+                        this.selectorHint.textContent = t('preview.selector_hint', { selector: this.selector });
+                    }
+                    else {
+                        this.selectorHint.textContent = t('preview.css_hint', { selector: this.selector, css: this.style });
+                    }
+                });
+            }
+        )
+                    
 
             .addButton(btn => btn
             .setButtonText(t('action_bar.save_styles.name'))
@@ -1787,7 +1871,8 @@ class MultiSelectorInstance {
 
     private setupListeners() {
         document.addEventListener('mousemove', this.onMouseMove, true);
-        document.addEventListener('mousedown', this.onMouseDown, {capture: true});
+        document.addEventListener('click', this.onClick, true);
+        document.addEventListener('mousedown', this.onMousedown, true);
         document.addEventListener('scroll', this.onScroll, true);
         this.updateInterval = window.setInterval(() => {
             if(this.showOverlays) {
@@ -2000,22 +2085,32 @@ class MultiSelectorInstance {
             this.update();
         }
     }
-
-    private onMouseDown = (e: MouseEvent) => {
-        if(this.frozen) return; // 如果已经冻结，说明编辑器弹窗已打开，不再响应点击事件
-        this.toggleOverlays(false); // 关闭覆盖层显示，避免干扰编辑器操作
+    private onMousedown = (e: MouseEvent) => {
+        if(this.frozen) return;
         e.preventDefault();
         e.stopImmediatePropagation();
+    }
 
+    private onClick = (e: MouseEvent) => {
+        if(this.frozen) return; // 如果已经冻结，说明编辑器弹窗已打开，不再响应点击事件
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        if (typeof this.mouseEl?.className === 'object') {
+            new Notice(t('console.selected_svg'));
+            return;
+        }
+        
         if (!this.mouseEl) return;
-
+        
+        this.toggleOverlays(false); // 关闭覆盖层显示，避免干扰编辑器操作
         new CSSInspectorFloatingPanel(this.app, this.mouseEl, this, this.pugin).open().setPosition(e.clientX + 30, 100);
         this.frozen = true; // 冻结状态，防止后续鼠标移动干扰选择
     };
 
     private destroy() {
         document.removeEventListener('mousemove', this.onMouseMove, true);
-        document.removeEventListener('mousedown', this.onMouseDown, true);
+        document.removeEventListener('click', this.onClick, true);
         if (this.updateInterval) {
             window.clearInterval(this.updateInterval);
         }

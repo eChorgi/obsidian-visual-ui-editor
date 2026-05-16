@@ -4,11 +4,18 @@
 .visual-ui-editor-visible.visual-ui-editor-hidden {
     display: inline;
 }
+.visual-ui-editor {
+    --slider-track-background : var(--text-muted);
+}
 
 ::-webkit-scrollbar-corner {
     background: transparent;
 }
-
+.visual-ui-editor-weight-setting {
+    /* padding-top: 10px;
+    padding-bottom: 4px; */
+    background-color: var(--background-primary);
+}
 
 .visual-ui-editor-sub-container {
     margin-left: 20px;
@@ -54,10 +61,9 @@
 }
 
 .visual-ui-editor .value-display-stack{
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: end;
-    width: 70px;
     height: 16px;
 }
 
@@ -94,13 +100,31 @@
     text-align: center;
     transform: translateY(-50%);
     font-size: var(--font-smallest);
-    color: transparent;
+    color: var(--text-muted);
     transition: color 0.3s ease;
 }
 
 .visual-ui-editor-important-status-text.important {
     color: var(--text-accent);
 }
+
+.visual-ui-editor-preview-status-text{
+    position: absolute;
+    top: 27px;
+    left: 0%;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    transform: translateY(-50%);
+    font-size: var(--font-smallest);
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+}
+
+.visual-ui-editor-preview-status-text.on {
+    color: var(--text-accent);
+}
+
 
 .visual-ui-editor-setting-name{
     width: 60px;

@@ -449,12 +449,8 @@ class AttributeEditItem {
             // 1. 创建 UI 结构
             const displayStack = this.setting.controlEl.createDiv({ cls: 'value-display-stack' });
             const valueDisplay = displayStack.createEl('span', { text: `${numericValue}${unit}`, cls: 'value-display-label' });
-            const valueInput = displayStack.createEl('input', { type: 'number', cls: 'value-display-input' });
+            const valueInput = displayStack.createEl('input', { type: 'number', cls: ['value-display-input', 'visual-ui-editor-hidden'] });
             
-            // 初始样式设置
-            Object.assign(displayStack.style, { display: 'flex', alignItems: 'center', justifyContent: 'end', width: '70px', height: '16px' });
-            Object.assign(valueDisplay.style, { cursor: 'pointer', fontSize: 'var(--font-smaller)', color: 'var(--text-muted)', borderBottom: '1px dashed var(--text-faint)'});
-            Object.assign(valueInput.style, { display: 'none', border: 'none', maxWidth: '50px', textAlign: 'right', fontSize: 'var(--font-smaller)' });
 
             const slider = this.setting.controlEl.createEl('input', {
                 type: 'range',
@@ -527,12 +523,7 @@ class AttributeEditItem {
             // 1. 创建 UI 结构
             const displayStack = this.setting.controlEl.createDiv({ cls: 'value-display-stack' });
             const valueDisplay = displayStack.createEl('span', { text: `${this.orginValue}`, cls: 'value-display-label' });
-            const valueInput = displayStack.createEl('input', { type: 'text', cls: 'value-display-input' });
-            
-            // 初始样式设置
-            Object.assign(displayStack.style, { display: 'flex', alignItems: 'center', justifyContent: 'end', width: '70px', height: '16px' });
-            Object.assign(valueDisplay.style, { cursor: 'pointer', fontSize: 'var(--font-smaller)', color: 'var(--text-muted)', borderBottom: '1px dashed var(--text-faint)'});
-            Object.assign(valueInput.style, { display: 'none', border: 'none', maxWidth: '90px', textAlign: 'right', fontSize: 'var(--font-smaller)' });
+            const valueInput = displayStack.createEl('input', { type: 'text', cls: ['value-display-input', 'visual-ui-editor-hidden'] });
 
             
             this.setting.addColorPicker(color => {
@@ -884,6 +875,7 @@ class CSSInspectorFloatingPanel{
         // 创建主面板
         this.el = document.createElement('div');
         this.el.addClass('obsidian-floating-panel');
+        this.el.addClass('visual-ui-editor');
 
         Object.assign(this.el.style, {
             position: 'fixed',
@@ -1401,7 +1393,7 @@ class CSSInspectorFloatingPanel{
                 // 4. 创建隐藏输入框 (Input)
                 const valueInput = displayStack.createEl('input', {
                     type: 'number',
-                    cls: 'visual-ui-editor-value-input'
+                    cls: ['visual-ui-editor-value-input', 'visual-ui-editor-hidden']
                 });         
 
                 // 5. 添加原生 Slider

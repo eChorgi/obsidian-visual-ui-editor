@@ -1,8 +1,8 @@
-.visual-ui-editor-hidden {
-    display: none !important;
+.visual-ui-editor-hidden.visual-ui-editor-hidden {
+    display: none;
 }
-.visual-ui-editor-visible {
-    display: inline !important;
+.visual-ui-editor-visible.visual-ui-editor-hidden {
+    display: inline;
 }
 
 .visual-ui-editor-image-upload-input{
@@ -59,8 +59,15 @@
     cursor: grabbing;
 }
 
+.visual-ui-editor .value-display-stack{
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    width: 70px;
+    height: 16px;
+}
 
-.visual-ui-editor-value-display-label{
+.visual-ui-editor .value-display-label{
     cursor: pointer;
     font-size: var(--font-smaller);
     color: var(--text-muted);
@@ -68,18 +75,18 @@
 }
 
 .visual-ui-editor-image-upload-input{
-    border: 1px solid var(--text-muted) !important;
-    color: var(--text-muted) !important;
-    border-radius: 10px !important;
-    padding: 6px !important;
-    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    border-radius: 10px;
+    padding: 6px;
+    background-color: var(--background-secondary);
 }
-
-.visual-ui-editor-value-input{
-    display: none;
-    width: 40px;
+.visual-ui-editor .value-display-input{
+    border: none;
+    max-width: 90px;
     text-align: right;
     font-size: var(--font-smaller);
+    /* width: 40px; */
 }
 
 
@@ -121,16 +128,16 @@
 }
 
 .visual-ui-editor.confirm-modal-mac {
-    background-color: rgba(255, 255, 255, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px) saturate(180%);
-    border-radius: 27px !important;
+    border-radius: 27px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    /* padding: 12px !important;  */
-    padding-top: 15px !important; 
-    padding-bottom: 18px !important; 
-    padding-left: 20px !important; 
-    padding-right: 20px !important;
-    max-width: 280px !important; 
+    /* padding: 12px;  */
+    padding-top: 15px; 
+    padding-bottom: 18px; 
+    padding-left: 20px; 
+    padding-right: 20px;
+    max-width: 280px; 
     text-align: center;
     border: 0.5px solid rgba(0, 0, 0, 0.4);
     animation: mac-modal-appear 0.2s ease-out;
@@ -176,39 +183,39 @@
 
 
 .visual-ui-editor .confirm-button-mac {
-    background-color: #007aff !important;
-    color: white !important;
-    border: none !important;
+    background-color: #007aff;
+    color: white;
+    border: none;
     /* box-shadow: 0 1px 3px rgba(0, 122, 255, 0.3); */
 }
 
 .visual-ui-editor .confirm-button-mac:hover {
-    background-color: #0070f8 !important;
+    background-color: #0070f8;
 }
 
 /* 取消按钮 */
 .visual-ui-editor .cancel-button-mac {
-    background-color: #e4e4e4 !important;
-    color: #333 !important;
+    background-color: #e4e4e4;
+    color: #333;
 }
 
 .visual-ui-editor .cancel-button-mac:hover {
-    background-color: #dfdfdf !important;
+    background-color: #dfdfdf;
 }
 
 /* 暗色模式适配 */
 .theme-dark .visual-ui-editor.confirm-modal-mac {
-    border: 0.5px solid rgba(255,255,255,0.4) !important;
-    background-color: #17171708 !important;
+    border: 0.5px solid rgba(255,255,255,0.4);
+    background-color: #17171708;
     /* border: 0.5px solid rgba(255, 255, 255, 0.1); */
     /* box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); */
 }
 .theme-dark .visual-ui-editor.confirm-modal-mac h2 { color: #fff; }
 .theme-dark .visual-ui-editor .cancel-button-mac { 
-    background-color: rgba(255, 255, 255, 0.1) !important; 
-    color: #eee !important; 
-    /* border-color: rgba(255, 255, 255, 0.05) !important; */
+    background-color: rgba(255, 255, 255, 0.1); 
+    color: #eee; 
+    /* border-color: rgba(255, 255, 255, 0.05); */
 }
 .theme-dark .visual-ui-editor .cancel-button-mac:hover {
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.15);
 }

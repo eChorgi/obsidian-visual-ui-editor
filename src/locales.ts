@@ -353,7 +353,7 @@ export const resources = {
             }
         }
     },
-    "zh": {
+    zh: {
         translation: {
             "title-bar": "⋮ UI 样式修改器 (拖动我移动位置)",
             "ribbon": {
@@ -680,6 +680,336 @@ export const resources = {
             },
             "close": {
                 "confirm": "确定要关闭预览面板吗？未保存的样式将会丢失。"
+            }
+        }
+    },
+    "zh-TW": {
+        translation: {
+            "title-bar": "⋮ UI 樣式修改器 (拖動我移動位置)",
+            "ribbon": {
+                "tooltip": "選擇UI元素進行修改"
+            },
+            "command": {
+                "start_selector": "選擇UI元素進行修改"
+            },
+            "confirm_modal": {
+                "confirm_button": "確認",
+                "cancel_button": "取消"
+            },
+            "console": {
+                "get_system_font_error": "獲取繫統字體失敗，詳情: ",
+                "copy_failed": "複製失敗，詳情: ",
+                "generate_selector_failed": "生成元素選擇器失敗，詳情: "
+            },
+            "font": {
+                "default_option": "查看繫統字體"
+            },
+            "notice": {
+                "selector_copied": "已複製選擇器: {{selector}}",
+                "css_copied": "已複製CSS代碼: {{css}}",
+                "copy_failed": "複製失敗"
+            },
+            "preview": {
+                "element_preview": "[預覽] / 鼠標懸停可查看文檔中的元素",
+                "selector_hint": "[@selector]/ 點擊複製選擇器\n{{selector}}\n",
+                "css_hint": "[@css-preview]/ 點擊複製css代碼\n{{selector}}\n{\n\t{{css}}}",
+                "pseudo_element_hint": "(提示: 選中了偽元素, 可能需要修改背景顏色來修改顏色)"
+            },
+            "property": {
+                "background": "背景",
+                "color": "顏色",
+                "opacity": "透明度",
+                "background-color": "背景顏色",
+                "background-image": "背景圖片",
+                "background-repeat": {
+                    "name": "平鋪方式",
+                    "no-repeat": "不平鋪",
+                    "repeat": "平鋪",
+                    "repeat-x": "橫向平鋪",
+                    "repeat-y": "縱向平鋪"
+                },
+                "background-size": {
+                    "name": "縮放方式",
+                    "auto": "原始",
+                    "cover": "優先鋪滿容器",
+                    "contain": "優先展示全圖"
+                },
+                "background-position": {
+                    "name": "對齊位置",
+                    "center": "居中",
+                    "top": "靠頂",
+                    "bottom": "靠底",
+                    "left": "靠左",
+                    "right": "靠右"
+                },
+                "background-blend-mode": {
+                    "name": "背景混合模式",
+                    "normal": "正常",
+                    "multiply": "正片疊底",
+                    "screen": "濾色",
+                    "overlay": "疊加",
+                    "darken": "變暗",
+                    "lighten": "變亮"
+                },
+                "background-attachment": {
+                    "name": "背景滾動模式",
+                    "scroll": "隨內容滾動",
+                    "fixed": "固定",
+                    "local": "隨元素滾動"
+                },
+                "background-origin": {
+                    "name": "背景位置",
+                    "padding-box": "內邊距區左上角",
+                    "border-box": "邊框區左上角",
+                    "content-box": "內容區左上角"
+                },
+                "background-clip": {
+                    "name": "背景裁剪",
+                    "border-box": "邊框區",
+                    "padding-box": "內邊距區",
+                    "content-box": "內容區"
+                },
+                "font-family": "字體",
+                "font-size": "字體大小",
+                "font-style": {
+                    "name": "字體樣式",
+                    "normal": "正常",
+                    "italic": "斜體",
+                    "oblique": "強製傾斜"
+                },
+                "font-weight": {
+                    "name": "字體粗細",
+                    "normal": "正常",
+                    "bold": "加粗",
+                    "bolder": "超粗",
+                    "lighter": "細"
+                },
+                "line-height": "行高",
+                "letter-spacing": "字間距",
+                "text-align": {
+                    "name": "文字對齊",
+                    "left": "左對齊",
+                    "right": "右對齊",
+                    "center": "居中對齊",
+                    "justify": "兩端對齊",
+                    "start": "起始位置",
+                    "end": "末尾位置",
+                    "match-parent": "匹配父元素"
+                },
+                "text-decoration": "裝飾線",
+                "text-decoration-line": {
+                    "name": "線條",
+                    "none": "無",
+                    "underline": "下劃線",
+                    "overline": "上劃線",
+                    "line-through": "刪除線"
+                },
+                "text-decoration-color": "顏色",
+                "text-decoration-style": {
+                    "name": "樣式",
+                    "solid": "實線",
+                    "dashed": "虛線",
+                    "dotted": "點線",
+                    "double": "雙線",
+                    "wavy": "波浪線"
+                },
+                "text-decoration-thickness": "粗細",
+                "text-underline-offset": "偏移",
+                "text-decoration-skip-ink": {
+                    "name": "跳過字母垂足",
+                    "auto": "自動",
+                    "none": "無"
+                },
+                "white-space": {
+                    "name": "文字換行",
+                    "normal": "正常",
+                    "nowrap": "不換行",
+                    "pre": "保留空白",
+                    "pre-wrap": "保留空白並換行",
+                    "pre-line": "合並空白並換行"
+                },
+                "text-overflow": {
+                    "name": "文本溢出處理",
+                    "clip": "裁剪",
+                    "ellipsis": "省略號"
+                },
+                "text-shadow": "文本陰影",
+                "horizontal-offset": "水平偏移",
+                "vertical-offset": "垂直偏移",
+                "blur-radius": "模糊半徑",
+                "shadow-color": "陰影顏色",
+                "border": "邊框",
+                "border-width": "邊框寬度",
+                "border-top-width": "上",
+                "border-right-width": "右",
+                "border-bottom-width": "下",
+                "border-left-width": "左",
+                "border-style": {
+                    "name": "邊框樣式",
+                    "none": "無",
+                    "solid": "實線",
+                    "dashed": "虛線",
+                    "dotted": "點線",
+                    "double": "雙線",
+                    "groove": "凹槽",
+                    "ridge": "脊線",
+                    "inset": "內嵌",
+                    "outset": "外嵌"
+                },
+                "border-top-style": { "name": "上" },
+                "border-right-style": { "name": "右" },
+                "border-bottom-style": { "name": "下" },
+                "border-left-style": { "name": "左" },
+                "border-color": "邊框顏色",
+                "border-top-color": "上",
+                "border-right-color": "右",
+                "border-bottom-color": "下",
+                "border-left-color": "左",
+                "border-radius": "圓角",
+                "border-top-left-radius": "左上",
+                "border-top-right-radius": "右上",
+                "border-bottom-right-radius": "右下",
+                "border-bottom-left-radius": "左下",
+                "padding": "內邊距",
+                "padding-top": "上",
+                "padding-right": "右",
+                "padding-bottom": "下",
+                "padding-left": "左",
+                "margin": "外邊距",
+                "margin-top": "上",
+                "margin-right": "右",
+                "margin-bottom": "下",
+                "margin-left": "左",
+                "advanced": "高級屬性 [ 需要css知識 ]",
+                "dimensions": "尺寸",
+                "width": "寬度",
+                "height": "高度",
+                "min-width": "最小寬度",
+                "min-height": "最小高度",
+                "max-width": "最大寬度",
+                "max-height": "最大高度",
+                "layout": {
+                    "name": "佈局",
+                    "block": "塊級",
+                    "inline-block": "行內塊",
+                    "inline": "行內",
+                    "flex": "彈性佈局",
+                    "inline-flex": "行內彈性佈局",
+                    "grid": "網格佈局",
+                    "inline-grid": "行內網格佈局"
+                },
+                "flex-direction": {
+                    "name": "彈性方向",
+                    "row": "橫向",
+                    "row-reverse": "橫向反序",
+                    "column": "縱向",
+                    "column-reverse": "縱向反序"
+                },
+                "justify-content": {
+                    "name": "主軸對齊方式",
+                    "flex-start": "起點對齊",
+                    "flex-end": "終點對齊",
+                    "center": "居中",
+                    "space-between": "兩端對齊",
+                    "space-around": "環繞對齊",
+                    "space-evenly": "平均對齊",
+                    "stretch": "拉伸填滿",
+                    "start": "起始位置對齊",
+                    "end": "末尾位置對齊",
+                    "left": "左對齊",
+                    "right": "右對齊"
+                },
+                "align-items": {
+                    "name": "交叉軸對齊方式",
+                    "stretch": "拉伸填滿",
+                    "flex-start": "起點對齊",
+                    "flex-end": "終點對齊",
+                    "center": "居中",
+                    "baseline": "基線對齊",
+                    "start": "起始位置對齊",
+                    "end": "末尾位置對齊",
+                    "self-start": "自身起始位置對齊",
+                    "self-end": "自身末尾位置對齊"
+                },
+                "flex-wrap": {
+                    "name": "換行",
+                    "nowrap": "不換行",
+                    "wrap": "換行",
+                    "wrap-reverse": "反向換行"
+                },
+                "grid-template-columns": "網格列數",
+                "grid-template-rows": "網格行數",
+                "grid-row-gap": "行間距",
+                "grid-column-gap": "列間距",
+                "order": "子項排序",
+                "flex-grow": "伸縮比例",
+                "flex-shrink": "收縮比例",
+                "flex-basis": "基礎尺寸",
+                "position": {
+                    "name": "定位",
+                    "static": "默認",
+                    "relative": "相對定位",
+                    "absolute": "絶對定位",
+                    "fixed": "固定定位",
+                    "sticky": "粘性定位"
+                },
+                "z-index": "層級",
+                "top": "上偏移",
+                "bottom": "下偏移",
+                "left": "左偏移",
+                "right": "右偏移",
+                "filter": "濾鏡&特效",
+                "box-shadow": "陰影",
+                "filter.main": "前景",
+                "filter.background": "背景",
+                "blur": "模糊",
+                "brightness": "亮度",
+                "contrast": "對比度",
+                "grayscale": "灰度",
+                "invert": "反轉",
+                "saturate": "飽和度",
+                "transform": {
+                    "name": "變換",
+                    "rotate": "旋轉",
+                    "scale": "縮放",
+                    "translate-x": "水平位移",
+                    "translate-y": "垂直位移"
+                },
+                "clear_button": "清空",
+                "reset_button": "重置"
+            },
+            "action_bar": {
+                "priority": {
+                    "name": "覆蓋權重",
+                    "tooltip": "當多個樣式作用於同一元素時，權重更高的樣式會覆蓋權重較低的樣式。默認權重爲1，數值越大優先級越高。",
+                    "force": "強製"
+                },
+                "erase_styles": {
+                    "name": "抹除樣式",
+                    "tooltip": "抹除所有該元素設置過的曆史樣式，恢複到未設置狀態。",
+                    "confirm": "確定要抹除所有該元素設置過的 [曆史] 樣式嗎？\n該元素將恢複爲沒有設置過任何樣式的狀態, 該操作無法撤銷！",
+                    "notice": "✅已抹除該元素的曆史樣式",
+                    "no_styles_notice": "✅沒有髮現該元素的曆史樣式"
+                },
+                "reset_styles": {
+                    "name": "重置",
+                    "tooltip": "重置此次編輯的所有樣式，曆史樣式將會保留。",
+                    "confirm": "確定要重置本次打開麵闆以來編輯的所有樣式嗎？曆史樣式將會保留",
+                    "notice": "✅已重置本次編輯的樣式"
+                },
+                "preview": {
+                    "name": "文檔預覽",
+                    "tooltip": "將當前樣式直接應用到文檔中進行預覽（刷新或關閉窗口後失效）",
+                    "notice": "已應用✅\n臨時css文件路徑: {{filePath}}"
+                },
+                "save_styles": {
+                    "name": "保存",
+                    "tooltip": "將樣式永久保存",
+                    "notice": "已保存✅\ncss文件路徑: {{filePath}}"
+                }
+            },
+            "close": {
+                "confirm": "確定要關閉預覽麵闆嗎？未保存的樣式將會丟失。"
             }
         }
     }

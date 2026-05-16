@@ -4,7 +4,7 @@ A plugin that helps you visually select and modify any UI element.
 
 ## How to use
 
-![CleanShot 2026-05-16 at 17.31.47@2x](./assets/CleanShot 2026-05-16 at 17.31.47@2x.png)
+<img src="./assets/CleanShot 2026-05-16 at 17.31.47@2x.png" alt="CleanShot 2026-05-16 at 17.02.32@2x" />
 
 Click the icon on the left toolbar to enter selection mode. In this mode, hovering your mouse over any element will select elements of the same type. Left-clicking will then open the editing panel, as shown in the image.
 
@@ -35,7 +35,7 @@ Click the icon on the left toolbar to enter selection mode. In this mode, hoveri
 
 # 如何使用
 
-![CleanShot 2026-05-16 at 17.31.09@2x](./assets/CleanShot 2026-05-16 at 17.31.09@2x.png)
+<img src="./assets/CleanShot 2026-05-16 at 17.31.09@2x.png" alt="CleanShot 2026-05-16 at 17.02.32@2x" />
 
 点击左侧功能栏的图标，会进入选择模式，此时鼠标移到任意元素即可选中同类元素，左键点击后会打开编辑栏，如图
 
@@ -67,7 +67,7 @@ Click the icon on the left toolbar to enter selection mode. In this mode, hoveri
 
 # 如何使用
 
-![CleanShot 2026-05-16 at 17.32.43@2x](./assets/CleanShot 2026-05-16 at 17.32.43@2x.png)
+<img src="./assets/CleanShot 2026-05-16 at 17.32.43@2x.png" alt="CleanShot 2026-05-16 at 17.02.32@2x" />
 
 點擊左側功能欄的瞄準圖標，會進入選擇模式，此時滑鼠移到任意元素即可選中同類元素，左鍵點擊後會打開編輯欄，如圖
 

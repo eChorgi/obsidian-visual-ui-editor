@@ -11,6 +11,9 @@
     padding: 6px;
 }
 
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
 
 
 .visual-ui-editor-sub-container {
@@ -62,6 +65,14 @@
     font-size: var(--font-smaller);
     color: var(--text-muted);
     border-bottom: 1px dashed var(--text-faint); /* 表示可点 */
+}
+
+.visual-ui-editor-image-upload-input{
+    border: 1px solid var(--text-muted) !important;
+    color: var(--text-muted) !important;
+    border-radius: 10px !important;
+    padding: 6px !important;
+    background-color: var(--background-secondary) !important;
 }
 
 .visual-ui-editor-value-input{

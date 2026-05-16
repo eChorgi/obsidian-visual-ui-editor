@@ -1,19 +1,35 @@
-import { App, Plugin, Notice, Setting, ColorComponent, Modal } from 'obsidian';
+import { App, Plugin, Notice, Setting, ColorComponent, Modal, getLanguage } from 'obsidian';
 import { UISetting } from './types';
+
+import i18next from 'i18next';
+import { resources } from './locales';
+import { t } from './i18n';
 
 export default class VisualUIEditorPlugin extends Plugin {
 
     public addStyle (css: string): HTMLStyleElement {
         return this.addStyle(css);
     }
-    onload() {
-        this.addRibbonIcon('target', '选择UI元素进行修改', () => {
+    async onload() {
+        const lang = getLanguage() || 'en';
+
+        await i18next.init({
+            resources,
+            lng: lang,
+            fallbackLng: 'en',
+            interpolation: {
+                escapeValue: false
+            }
+        });
+
+
+        this.addRibbonIcon('target', t('ribbon.tooltip'), () => {
             new MultiSelectorInstance(this.app, this);
         });
 
         this.addCommand({
             id: 'start-multi-element-selector',
-            name: '选择UI元素进行修改',
+            name: t('command.start_selector'),
             callback: () => new MultiSelectorInstance(this.app, this)
         });
     }
@@ -42,13 +58,13 @@ export class ConfirmModal extends Modal {
         
         // 3. 确认按钮 (macOS 习惯：确认在右)
         const confirmButton = buttonContainer.createEl('button', { 
-            text: '确认', 
+            text: t('confirm_modal.confirm_button'),
             cls: 'confirm-button-mac' 
         });
         
         // 4. 取消按钮
         const cancelButton = buttonContainer.createEl('button', { 
-            text: '取消', 
+            text: t('confirm_modal.cancel_button'),
             cls: 'cancel-button-mac' 
         });
 
@@ -279,7 +295,7 @@ class AttributeEditItem {
                 option.style.fontFamily = name; // 让下拉项显示对应字体
             });
         } catch (err) {
-            console.error('获取系统字体失败:', err);
+            console.error(t('console.get_system_font_error'), err);
             throw err;
         }
     }
@@ -393,9 +409,6 @@ class AttributeEditItem {
                 item.reset();
             });
         }
-        // if(this.name === "颜色")
-        //     debugger
-        // console.log(`Resetting ${this.name} to original value: ${this.orginValue}`);
         this.onReset?.();
         this.setProp(this.orginValue);
         this.currentValue = undefined;
@@ -608,14 +621,14 @@ class AttributeEditItem {
             // 清空按钮
             this.setting.addExtraButton(btn => btn
                 .setIcon('cross')
-                .setTooltip('清空')
+                .setTooltip(t('clear_button'))
                 .onClick(() => {
                     updateAll('rgba(0, 0, 0, 0)', 'none');
                 })
             );
             this.setting.addExtraButton(btn => btn
                 .setIcon('reset')
-                .setTooltip('重置')
+                .setTooltip(t('reset_button'))
                 .onClick(() => {
                     // 应用原始样式
                     this.reset();
@@ -625,15 +638,12 @@ class AttributeEditItem {
             updateAll(this.orginValue, 'none'); // 初始化显示
         }
         else if (this.type === 'font') {
-            //显示提示文本
-            // setting.setDesc('选择字体');
-
             const selectEl = this.setting.controlEl.createEl('select');
             
             // 1. 添加默认选项
             const defaultOption = selectEl.createEl('option');
             defaultOption.value = '';
-            defaultOption.textContent = '查看系统字体';
+            defaultOption.textContent = t('font.default_option');
 
             Object.assign(selectEl.style, {
                 padding: '4px',
@@ -713,9 +723,8 @@ class AttributeEditItem {
             );
         }
         else if (this.type === 'image-upload') {
-            const fileInput = this.setting.controlEl.createEl('input', { type: 'file', cls: 'ui-designer-image-upload-input' });
+            const fileInput = this.setting.controlEl.createEl('input', { type: 'file', cls: 'visual-ui-editor-image-upload-input' });
             fileInput.accept = 'image/*';
-            fileInput.classList.add('ui-designer-image-upload-input');
 
 
             fileInput.addEventListener('change', () => {
@@ -895,7 +904,7 @@ class CSSInspectorFloatingPanel{
 
         // --- 拖拽手柄 ---
         const handle = this.el.createDiv({ cls: 'visual-ui-editor-drag-handle' });
-        handle.textContent = '⋮ UI 样式修改器 (拖动我移动位置)';
+        handle.textContent = t('title-bar');
         handle.classList.add('visual-ui-editor-title')
         // 拖拽逻辑 (使用箭头函数自动绑定 this)
         handle.onmousedown = (e) => {
@@ -972,7 +981,7 @@ class CSSInspectorFloatingPanel{
         });
 
         const previewTitle = elementPreviewContainer.createDiv({ cls: 'preview-hint' });
-        previewTitle.textContent = '[预览] / 鼠标悬停可查看文档中的元素';
+        previewTitle.textContent = t('preview.element_preview');
         Object.assign(previewTitle.style, {
             position: 'absolute',
             width: '100%',
@@ -1012,22 +1021,22 @@ class CSSInspectorFloatingPanel{
             if(this.selectorHint.textContent?.startsWith('[@selector]')) {
                 const selector = this.selector;
                 navigator.clipboard.writeText(selector).then(() => {
-                    new Notice(`已复制选择器: ${selector}`); 
+                    new Notice(t('notice.selector_copied', { selector })); 
                 }).catch(err => {
-                    console.error('复制失败:', err);
-                    new Notice('复制失败');
+                    console.error(t('console.copy_failed'), err);
+                    new Notice(t('notice.copy_failed'));
                 });
                 return;
             }
             const css = this.exportCSS(this.priority, this.isImportant);
             navigator.clipboard.writeText(css).then(() => {
-                new Notice(`已复制css代码: ${css}`); 
+                new Notice(t('notice.css_copied', { css })); 
             }).catch(err => {
-                console.error('复制失败:', err);
-                new Notice('复制失败');
+                console.error(t('console.copy_failed'), err);
+                new Notice(t('notice.copy_failed'));
             });
         });
-        this.selectorHint.textContent = `[@selector]/ 点击复制选择器\n${this.selector}\n`;
+        this.selectorHint.textContent = t('preview.selector_hint', { selector: this.selector });
         Object.assign(this.selectorHint.style, {
             position: 'absolute',
             top: '5px',
@@ -1068,7 +1077,7 @@ class CSSInspectorFloatingPanel{
         if(this.pseudo) {
             //增加上面居中提示选中了伪元素
             const hint = this.el.createDiv({ cls: 'preview-hint' });
-            hint.textContent = '(提示: 选中了伪元素, 可能需要修改背景颜色来修改颜色)';
+            hint.textContent = t('preview.pseudo_element_hint');
             Object.assign(hint.style, {
                 position: 'absolute',
                 top: '125px',
@@ -1091,7 +1100,7 @@ class CSSInspectorFloatingPanel{
             if(this.pseudo) {
                 //增加上面居中提示选中了伪元素
                 const hint = this.el.createDiv({ cls: 'preview-hint' });
-                hint.textContent = '(提示: 选中了伪元素, 可能需要修改背景颜色来修改颜色)';
+                hint.textContent = t('preview.pseudo_element_hint');
                 Object.assign(hint.style, {
                     position: 'absolute',
                     top: '125px',
@@ -1144,183 +1153,183 @@ class CSSInspectorFloatingPanel{
         elementPreviewContainer.appendChild(this.previewEl);
         // --- 属性编辑区 ---
         const props: UISetting[] = [
-            { name: '背景', prop: 'background', type: 'text',
+            { name: t("property.background"), prop: 'background', type: 'text',
                 subs: [
-                    { name: '背景颜色', prop: 'background-color', type: 'color' },
-                    { name: '背景图片', prop: 'background-image', type: 'image-upload' },
-                    { name: '平铺方式', prop: 'background-repeat', type: 'select', options: ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'], optionsDisplay: ['不平铺', '平铺', '横向平铺', '纵向平铺'] },
-                    { name: '缩放方式', prop: 'background-size', type: 'select', options: ['auto', 'cover', 'contain'], optionsDisplay: ['原始', '优先铺满容器', '优先展示全图'] },
-                    { name: '对齐位置', prop: 'background-position', type: 'select', options: ['center', 'top', 'bottom', 'left', 'right'], optionsDisplay: ['居中', '靠顶', '靠底', '靠左', '靠右'] },
-                    { name: '背景混合模式', prop: 'background-blend-mode', type: 'select',options: ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten'],optionsDisplay: ['正常', '正片叠底', '滤色', '叠加', '变暗', '变亮']},
-                    { name: '背景滚动模式', prop: 'background-attachment', type: 'select', options: ['scroll', 'fixed', 'local'], optionsDisplay: ['随内容滚动', '固定', '随元素滚动'] },
-                    { name: '背景位置', prop: 'background-origin', type: 'select', options: ['padding-box', 'border-box', 'content-box'], optionsDisplay: ['内边距区左上角', '边框区左上角', '内容区左上角'] },
-                    { name: '背景裁剪', prop: 'background-clip', type: 'select', options: ['border-box', 'padding-box', 'content-box'], optionsDisplay: ['边框区', '内边距区', '内容区'] },
+                    { name: t("property.background-color"), prop: 'background-color', type: 'color' },
+                    { name: t("property.background-image"), prop: 'background-image', type: 'image-upload' },
+                    { name: t("property.background-repeat.name"), prop: 'background-repeat', type: 'select', options: ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'], optionsDisplay: [t('property.background-repeat.no-repeat'), t('property.background-repeat.repeat'), t('property.background-repeat.repeat-x'), t('property.background-repeat.repeat-y')] },
+                    { name: t("property.background-size.name"), prop: 'background-size', type: 'select', options: ['auto', 'cover', 'contain'], optionsDisplay: [t('property.background-size.auto'), t('property.background-size.cover'), t('property.background-size.contain')] },
+                    { name: t("property.background-position.name"), prop: 'background-position', type: 'select', options: ['center', 'top', 'bottom', 'left', 'right'], optionsDisplay: [t('property.background-position.center'), t('property.background-position.top'), t('property.background-position.bottom'), t('property.background-position.left'), t('property.background-position.right')] },
+                    { name: t("property.background-blend-mode.name"), prop: 'background-blend-mode', type: 'select',options: ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten'],optionsDisplay: [t('property.background-blend-mode.normal'), t('property.background-blend-mode.multiply'), t('property.background-blend-mode.screen'), t('property.background-blend-mode.overlay'), t('property.background-blend-mode.darken'), t('property.background-blend-mode.lighten')]},
+                    { name: t("property.background-attachment.name"), prop: 'background-attachment', type: 'select', options: ['scroll', 'fixed', 'local'], optionsDisplay: [t('property.background-attachment.scroll'), t('property.background-attachment.fixed'), t('property.background-attachment.local')] },
+                    { name: t("property.background-origin.name"), prop: 'background-origin', type: 'select', options: ['padding-box', 'border-box', 'content-box'], optionsDisplay: [t('property.background-origin.padding-box'), t('property.background-origin.border-box'), t('property.background-origin.content-box')] },
+                    { name: t("property.background-clip.name"), prop: 'background-clip', type: 'select', options: ['border-box', 'padding-box', 'content-box'], optionsDisplay: [t('property.background-clip.border-box'), t('property.background-clip.padding-box'), t('property.background-clip.content-box')] },
                 ]
             },
-            { name: '颜色', prop: 'color', type: 'color', also: ['-webkit-text-fill-color', '-webkit-text-stroke-color'] },
-            { name: '透明度', prop: 'opacity', type: 'slider', min: 0, max: 1, step: 0.1, unit: '' },
-            { name: '字体', prop: 'font-family', type: 'font' ,
+            { name: t("property.color"), prop: 'color', type: 'color', also: ['-webkit-text-fill-color', '-webkit-text-stroke-color'] },
+            { name: t("property.opacity"), prop: 'opacity', type: 'slider', min: 0, max: 1, step: 0.1, unit: '' },
+            { name: t("property.font-family"), prop: 'font-family', type: 'font' ,
                 subs: [
-                    { name: '字体大小', prop: 'font-size', type: 'slider', min: 10, max: 36, unit: 'px' },
-                    // { name: '字体颜色', prop: 'color', type: 'color', also: '-webkit-text-fill-color'},
-                    { name: '字体样式', prop: 'font-style', type: 'select', options: ['normal', 'italic', 'oblique'], optionsDisplay: ['正常', '斜体', '强制倾斜'] },
-                    { name: '字体粗细', prop: 'font-weight', type: 'select', options: ['normal', 'bold', 'bolder', 'lighter'], optionsDisplay: ['正常', '加粗', '超粗', '细'] },
-                    { name: '行高', prop: 'line-height', type: 'slider', min: 1, max: 3, step: 0.1, unit: '' },
-                    { name: '字间距', prop: 'letter-spacing', type: 'slider', min: -5, max: 20, unit: 'px' },
-                    { name: '文字对齐', prop: 'text-align', type: 'select', options: ['left', 'right', 'center', 'justify','start','end','match-parent'], optionsDisplay: ['左对齐', '右对齐', '居中对齐', '两端对齐', '起始位置', '末尾位置', '匹配父元素'] },
-                    { name: '装饰线', prop: 'text-decoration', type: 'text', 
+                    { name: t("property.font-size"), prop: 'font-size', type: 'slider', min: 10, max: 36, unit: 'px' },
+                    // { name: t("property.font-color"), prop: 'color', type: 'color', also: '-webkit-text-fill-color'},
+                    { name: t("property.font-style.name"), prop: 'font-style', type: 'select', options: ['normal', 'italic', 'oblique'], optionsDisplay: [t("property.font-style.normal"), t("property.font-style.italic"), t("property.font-style.oblique")] },
+                    { name: t("property.font-weight.name"), prop: 'font-weight', type: 'select', options: ['normal', 'bold', 'bolder', 'lighter'], optionsDisplay: [t("property.font-weight.normal"), t("property.font-weight.bold"), t("property.font-weight.bolder"), t("property.font-weight.lighter")] },
+                    { name: t("property.line-height"), prop: 'line-height', type: 'slider', min: 1, max: 3, step: 0.1, unit: '' },
+                    { name: t("property.letter-spacing"), prop: 'letter-spacing', type: 'slider', min: -5, max: 20, unit: 'px' },
+                    { name: t("property.text-align.name"), prop: 'text-align', type: 'select', options: ['left', 'right', 'center', 'justify','start','end','match-parent'], optionsDisplay: [t("property.text-align.left"), t("property.text-align.right"), t("property.text-align.center"), t("property.text-align.justify"), t("property.text-align.start"), t("property.text-align.end"), t("property.text-align.match-parent")] },
+                    { name: t("property.text-decoration"), prop: 'text-decoration', type: 'text', 
                         subs: [
-                            { name: '线条', prop: 'text-decoration-line', type: 'select', options: ['none', 'underline', 'overline', 'line-through'], optionsDisplay: ['无', '下划线', '上划线', '删除线'] },
-                            { name: '颜色', prop: 'text-decoration-color', type: 'color' },
-                            { name: '样式', prop: 'text-decoration-style', type: 'select', options: ['solid', 'dashed', 'dotted','double','wavy'], optionsDisplay: ['实线', '虚线', '点线','双线','波浪线'] },
-                            { name: '粗细', prop: 'text-decoration-thickness', type: 'slider', min: 0, max: 10, unit: 'px' },
+                            { name: t("property.text-decoration-line.name"), prop: 'text-decoration-line', type: 'select', options: ['none', 'underline', 'overline', 'line-through'], optionsDisplay: [t("property.text-decoration-line.none"), t("property.text-decoration-line.underline"), t("property.text-decoration-line.overline"), t("property.text-decoration-line.line-through")] },
+                            { name: t("property.text-decoration-color"), prop: 'text-decoration-color', type: 'color' },
+                            { name: t("property.text-decoration-style.name"), prop: 'text-decoration-style', type: 'select', options: ['solid', 'dashed', 'dotted','double','wavy'], optionsDisplay: [t("property.text-decoration-style.solid"), t("property.text-decoration-style.dashed"), t("property.text-decoration-style.dotted"), t("property.text-decoration-style.double"), t("property.text-decoration-style.wavy")] },
+                            { name: t("property.text-decoration-thickness"), prop: 'text-decoration-thickness', type: 'slider', min: 0, max: 10, unit: 'px' },
                             
-                            { name: '偏移', prop: 'text-underline-offset', type: 'slider', min: -20, max: 20, unit: 'px' },
-                            { name: '跳过字母垂足', prop: 'text-decoration-skip-ink', type: 'select', options: ['auto', 'none'], optionsDisplay: ['自动', '无'] },
+                            { name: t("property.text-underline-offset"), prop: 'text-underline-offset', type: 'slider', min: -20, max: 20, unit: 'px' },
+                            { name: t("property.text-decoration-skip-ink.name"), prop: 'text-decoration-skip-ink', type: 'select', options: ['auto', 'none'], optionsDisplay: [t("property.text-decoration-skip-ink.auto"), t("property.text-decoration-skip-ink.none")] },
                         ]
                     },
-                    { name: '文字换行', prop: 'white-space', type: 'select', options: ['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line'], optionsDisplay: ['正常', '不换行', '保留空白', '保留空白并换行', '合并空白并换行']},
-                    { name: '文本溢出处理', prop: 'text-overflow', type: 'select',options: ['clip', 'ellipsis'],optionsDisplay: ['裁剪', '省略号']},
-                    { name: '文本阴影', default:'', role: 'shorthand', prop: 'text-shadow', type: 'text',
+                    { name: t("property.white-space.name"), prop: 'white-space', type: 'select', options: ['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line'], optionsDisplay: [t("property.white-space.normal"), t("property.white-space.nowrap"), t("property.white-space.pre"), t("property.white-space.pre-wrap"), t("property.white-space.pre-line")] },
+                    { name: t("property.text-overflow.name"), prop: 'text-overflow', type: 'select',options: ['clip', 'ellipsis'],optionsDisplay: [t("property.text-overflow.clip"), t("property.text-overflow.ellipsis")] },
+                    { name: t("property.text-shadow"), default:'', role: 'shorthand', prop: 'text-shadow', type: 'text',
                         subs: [
-                            { name: '水平偏移',role: 'part-1', default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px' },
-                            { name: '垂直偏移',role: 'part-2', default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px' },
-                            { name: '模糊半径',role: 'part-3', default: "0px", prop: '', type: 'slider', min: 0, max: 20, unit: 'px' },
-                            { name: '阴影颜色',role: 'part-4', default: "rgba(0, 0, 0, 0.5)", prop: '', type: 'color' },
+                            { name: t("property.horizontal-offset"),role: 'part-1', default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px' },
+                            { name: t("property.vertical-offset"),role: 'part-2', default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px' },
+                            { name: t("property.blur-radius"),role: 'part-3', default: "0px", prop: '', type: 'slider', min: 0, max: 20, unit: 'px' },
+                            { name: t("property.shadow-color"),role: 'part-4', default: "rgba(0, 0, 0, 0.5)", prop: '', type: 'color' },
                         ]
                     }
                 ]
             },
-            { name: '边框', prop: 'border', type: 'text',
+            { name: t("property.border"), prop: 'border', type: 'text',
                 subs: [
-                    { name: '边框宽度', prop: 'border-width', type: 'slider', min: 0, max: 10, unit: 'px',
+                    { name: t("property.border-width"), prop: 'border-width', type: 'slider', min: 0, max: 10, unit: 'px',
                         subs: [
-                            { name: '上', prop: 'border-top-width', type: 'slider', min: 0, max: 10, unit: 'px' },
-                            { name: '右', prop: 'border-right-width', type: 'slider', min: 0, max: 10, unit: 'px' },
-                            { name: '下', prop: 'border-bottom-width', type: 'slider', min: 0, max: 10, unit: 'px' },
-                            { name: '左', prop: 'border-left-width', type: 'slider', min: 0, max: 10, unit: 'px' },
+                            { name: t("property.border-top-width"), prop: 'border-top-width', type: 'slider', min: 0, max: 10, unit: 'px' },
+                            { name: t("property.border-right-width"), prop: 'border-right-width', type: 'slider', min: 0, max: 10, unit: 'px' },
+                            { name: t("property.border-bottom-width"), prop: 'border-bottom-width', type: 'slider', min: 0, max: 10, unit: 'px' },
+                            { name: t("property.border-left-width"), prop: 'border-left-width', type: 'slider', min: 0, max: 10, unit: 'px' },
                         ]
                     },
-                    { name: '边框样式', prop: 'border-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: ['无', '实线', '虚线', '点线','双线','凹槽','脊线','内嵌','外嵌'],
+                    { name: t("property.border-style.name"), prop: 'border-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: [t("property.border-style.none"), t("property.border-style.solid"), t("property.border-style.dashed"), t("property.border-style.dotted"), t("property.border-style.double"), t("property.border-style.groove"), t("property.border-style.ridge"), t("property.border-style.inset"), t("property.border-style.outset")],
                         subs: [
-                            { name: '上', prop: 'border-top-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: ['无', '实线', '虚线', '点线','双线','凹槽','脊线','内嵌','外嵌'] },
-                            { name: '右', prop: 'border-right-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: ['无', '实线', '虚线', '点线','双线','凹槽','脊线','内嵌','外嵌'] },
-                            { name: '下', prop: 'border-bottom-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: ['无', '实线', '虚线', '点线','双线','凹槽','脊线','内嵌','外嵌'] },
-                            { name: '左', prop: 'border-left-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: ['无', '实线', '虚线', '点线','双线','凹槽','脊线','内嵌','外嵌'] },
+                            { name: t("property.border-top-style.name"), prop: 'border-top-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: [t("property.border-style.none"), t("property.border-style.solid"), t("property.border-style.dashed"), t("property.border-style.dotted"), t("property.border-style.double"), t("property.border-style.groove"), t("property.border-style.ridge"), t("property.border-style.inset"), t("property.border-style.outset")] },
+                            { name: t("property.border-right-style.name"), prop: 'border-right-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: [t("property.border-style.none"), t("property.border-style.solid"), t("property.border-style.dashed"), t("property.border-style.dotted"), t("property.border-style.double"), t("property.border-style.groove"), t("property.border-style.ridge"), t("property.border-style.inset"), t("property.border-style.outset")] },
+                            { name: t("property.border-bottom-style.name"), prop: 'border-bottom-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: [t("property.border-style.none"), t("property.border-style.solid"), t("property.border-style.dashed"), t("property.border-style.dotted"), t("property.border-style.double"), t("property.border-style.groove"), t("property.border-style.ridge"), t("property.border-style.inset"), t("property.border-style.outset")] },
+                            { name: t("property.border-left-style.name"), prop: 'border-left-style', type: 'select', options: ['none', 'solid', 'dashed', 'dotted','double','groove','ridge','inset','outset'], optionsDisplay: [t("property.border-style.none"), t("property.border-style.solid"), t("property.border-style.dashed"), t("property.border-style.dotted"), t("property.border-style.double"), t("property.border-style.groove"), t("property.border-style.ridge"), t("property.border-style.inset"), t("property.border-style.outset")] },
                         ]
                     },
-                    { name: '边框颜色', prop: 'border-color', type: 'color',
+                    { name: t("property.border-color"), prop: 'border-color', type: 'color',
                         subs: [
-                            { name: '上', prop: 'border-top-color', type: 'color' },
-                            { name: '右', prop: 'border-right-color', type: 'color' },
-                            { name: '下', prop: 'border-bottom-color', type: 'color' },
-                            { name: '左', prop: 'border-left-color', type: 'color' },
+                            { name: t("property.border-top-color"), prop: 'border-top-color', type: 'color' },
+                            { name: t("property.border-right-color"), prop: 'border-right-color', type: 'color' },
+                            { name: t("property.border-bottom-color"), prop: 'border-bottom-color', type: 'color' },
+                            { name: t("property.border-left-color"), prop: 'border-left-color', type: 'color' },
                         ]
                     },
-                    { name: '圆角', prop: 'border-radius', type: 'slider', min: 0, max: 50, unit: 'px', 
+                    { name: t("property.border-radius"), prop: 'border-radius', type: 'slider', min: 0, max: 50, unit: 'px', 
                         subs: [
-                            { name: '左上', prop: 'border-top-left-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
-                            { name: '右上', prop: 'border-top-right-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
-                            { name: '右下', prop: 'border-bottom-right-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
-                            { name: '左下', prop: 'border-bottom-left-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.border-top-left-radius"), prop: 'border-top-left-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.border-top-right-radius"), prop: 'border-top-right-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.border-bottom-right-radius"), prop: 'border-bottom-right-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.border-bottom-left-radius"), prop: 'border-bottom-left-radius', type: 'slider', min: 0, max: 50, unit: 'px' },
                         ]
                     },
                 ]
             },
-            { name: '内边距', prop: 'padding', type: 'slider', min: 0, max: 100, unit: 'px',
+            { name: t("property.padding"), prop: 'padding', type: 'slider', min: 0, max: 100, unit: 'px',
                 subs: [
-                    { name: '上', prop: 'padding-top', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '右', prop: 'padding-right', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '下', prop: 'padding-bottom', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '左', prop: 'padding-left', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.padding-top"), prop: 'padding-top', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.padding-right"), prop: 'padding-right', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.padding-bottom"), prop: 'padding-bottom', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.padding-left"), prop: 'padding-left', type: 'slider', min: 0, max: 100, unit: 'px' },
                 ]
             },
-            { name: '外边距', prop: 'margin', type: 'slider', min: 0, max: 100, unit: 'px',
+            { name: t("property.margin"), prop: 'margin', type: 'slider', min: 0, max: 100, unit: 'px',
                 subs: [
-                    { name: '上', prop: 'margin-top', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '右', prop: 'margin-right', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '下', prop: 'margin-bottom', type: 'slider', min: 0, max: 100, unit: 'px' },
-                    { name: '左', prop: 'margin-left', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.margin-top"), prop: 'margin-top', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.margin-right"), prop: 'margin-right', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.margin-bottom"), prop: 'margin-bottom', type: 'slider', min: 0, max: 100, unit: 'px' },
+                    { name: t("property.margin-left"), prop: 'margin-left', type: 'slider', min: 0, max: 100, unit: 'px' },
                 ]
             },
             {
-                name: '高级属性 [ 需要css知识 ]', prop: '', type: 'none',
+                name: t("property.advanced"), prop: '', type: 'none',
                 subs: [
-                    { name: '尺寸', prop: '', type: 'none',
+                    { name: t("property.dimensions"), prop: '', type: 'none',
                         subs: [
-                            { name: '宽度', prop: 'width', type: 'slider', min: 0, max: 1000, unit: 'px' },
-                            { name: '高度', prop: 'height', type: 'slider', min: 0, max: 1000, unit: 'px' },
-                            { name: '最小宽度', prop: 'min-width', type: 'slider', min: 0, max: 1000, unit: 'px' },
-                            { name: '最小高度', prop: 'min-height', type: 'slider', min: 0, max: 1000, unit: 'px' },
-                            { name: '最大宽度', prop: 'max-width', type: 'slider', min: 0, max: 1000, unit: 'px' },
-                            { name: '最大高度', prop: 'max-height', type: 'slider', min: 0, max: 1000, unit: 'px' }
+                            { name: t("property.width"), prop: 'width', type: 'slider', min: 0, max: 1000, unit: 'px' },
+                            { name: t("property.height"), prop: 'height', type: 'slider', min: 0, max: 1000, unit: 'px' },
+                            { name: t("property.min-width"), prop: 'min-width', type: 'slider', min: 0, max: 1000, unit: 'px' },
+                            { name: t("property.min-height"), prop: 'min-height', type: 'slider', min: 0, max: 1000, unit: 'px' },
+                            { name: t("property.max-width"), prop: 'max-width', type: 'slider', min: 0, max: 1000, unit: 'px' },
+                            { name: t("property.max-height"), prop: 'max-height', type: 'slider', min: 0, max: 1000, unit: 'px' }
                         ]
                     },
-                    { name: '布局', prop: 'display', type: 'select', options: ['block', 'inline-block', 'inline', 'flex', 'inline-flex', 'grid', 'inline-grid'], optionsDisplay: ['块级', '行内块', '行内', '弹性布局', '行内弹性布局', '网格布局', '行内网格布局'],
+                    { name: t("property.layout.name"), prop: 'display', type: 'select', options: ['block', 'inline-block', 'inline', 'flex', 'inline-flex', 'grid', 'inline-grid'], optionsDisplay: [t("property.layout.block"), t("property.layout.inline-block"), t("property.layout.inline"), t("property.layout.flex"), t("property.layout.inline-flex"), t("property.layout.grid"), t("property.layout.inline-grid")],
                         subs: [
-                            { name: '弹性方向', prop: 'flex-direction', type: 'select', options: ['row', 'row-reverse', 'column', 'column-reverse'], optionsDisplay: ['横向', '横向反序', '纵向', '纵向反序'] },
-                            { name: '主轴对齐方式', prop: 'justify-content', type: 'select', options: ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch', 'start', 'end', 'left', 'right'], optionsDisplay: ['起点对齐', '终点对齐', '居中', '两端对齐', '环绕对齐', '平均对齐', '拉伸填满', '起始位置对齐', '末尾位置对齐', '左对齐', '右对齐'] },
-                            { name: '交叉轴对齐方式', prop: 'align-items', type: 'select', options: ['stretch', 'flex-start', 'flex-end', 'center', 'baseline', 'start', 'end', 'self-start', 'self-end'], optionsDisplay: ['拉伸填满', '起点对齐', '终点对齐', '居中', '基线对齐', '起始位置对齐', '末尾位置对齐', '自身起始位置对齐', '自身末尾位置对齐'] },
-                            { name: '换行', prop: 'flex-wrap', type: 'select', options: ['nowrap', 'wrap', 'wrap-reverse'], optionsDisplay: ['不换行', '换行', '反向换行'] },
+                            { name: t("property.flex-direction.name"), prop: 'flex-direction', type: 'select', options: ['row', 'row-reverse', 'column', 'column-reverse'], optionsDisplay: [t("property.flex-direction.row"), t("property.flex-direction.row-reverse"), t("property.flex-direction.column"), t("property.flex-direction.column-reverse")] },
+                            { name: t("property.justify-content.name"), prop: 'justify-content', type: 'select', options: ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch', 'start', 'end', 'left', 'right'], optionsDisplay: [t("property.justify-content.flex-start"), t("property.justify-content.flex-end"), t("property.justify-content.center"), t("property.justify-content.space-between"), t("property.justify-content.space-around"), t("property.justify-content.space-evenly"), t("property.justify-content.stretch"), t("property.justify-content.start"), t("property.justify-content.end"), t("property.justify-content.left"), t("property.justify-content.right")] },
+                            { name: t("property.align-items.name"), prop: 'align-items', type: 'select', options: ['stretch', 'flex-start', 'flex-end', 'center', 'baseline', 'start', 'end', 'self-start', 'self-end'], optionsDisplay: [t("property.align-items.stretch"), t("property.align-items.flex-start"), t("property.align-items.flex-end"), t("property.align-items.center"), t("property.align-items.baseline"), t("property.align-items.start"), t("property.align-items.end"), t("property.align-items.self-start"), t("property.align-items.self-end")] },
+                            { name: t("property.flex-wrap.name"), prop: 'flex-wrap', type: 'select', options: ['nowrap', 'wrap', 'wrap-reverse'], optionsDisplay: [t("property.flex-wrap.nowrap"), t("property.flex-wrap.wrap"), t("property.flex-wrap.wrap-reverse")] },
                             
-                            { name: '网格列数', on:'block', prop: 'grid-template-columns', type: 'text' },
-                            { name: '网格行数', on:'block', prop: 'grid-template-rows', type: 'text' },
-                            { name: '行间距', on:'block', prop: 'grid-row-gap', type: 'slider', min: 0, max: 50, unit: 'px' },
-                            { name: '列间距', on:'block', prop: 'grid-column-gap', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.grid-template-columns"), on:'block', prop: 'grid-template-columns', type: 'text' },
+                            { name: t("property.grid-template-rows"), on:'block', prop: 'grid-template-rows', type: 'text' },
+                            { name: t("property.grid-row-gap"), on:'block', prop: 'grid-row-gap', type: 'slider', min: 0, max: 50, unit: 'px' },
+                            { name: t("property.grid-column-gap"), on:'block', prop: 'grid-column-gap', type: 'slider', min: 0, max: 50, unit: 'px' },
                             
-                            { name: '子项排序',on:'flex', prop: 'order', type: 'slider', min: -10, max: 10, unit: '' },
-                            { name: '伸缩比例',on:'flex', prop: 'flex-grow', type: 'slider', min: 0, max: 5, unit: '' },
-                            { name: '收缩比例',on:'flex', prop: 'flex-shrink', type: 'slider', min: 0, max: 5, unit: '' },
-                            { name: '基础尺寸',on:'flex', prop: 'flex-basis', type: 'slider', min: 0, max: 500, unit: 'px' },
+                            { name: t("property.order"),on:'flex', prop: 'order', type: 'slider', min: -10, max: 10, unit: '' },
+                            { name: t("property.flex-grow"),on:'flex', prop: 'flex-grow', type: 'slider', min: 0, max: 5, unit: '' },
+                            { name: t("property.flex-shrink"),on:'flex', prop: 'flex-shrink', type: 'slider', min: 0, max: 5, unit: '' },
+                            { name: t("property.flex-basis"),on:'flex', prop: 'flex-basis', type: 'slider', min: 0, max: 500, unit: 'px' },
                         ]
                     },
-                    { name: '定位', prop: 'position', type: 'select', options: ['static', 'relative', 'absolute', 'fixed', 'sticky'], optionsDisplay: ['默认', '相对定位', '绝对定位', '固定定位', '粘性定位'],
+                    { name: t("property.position.name"), prop: 'position', type: 'select', options: ['static', 'relative', 'absolute', 'fixed', 'sticky'], optionsDisplay: [t("property.position.static"), t("property.position.relative"), t("property.position.absolute"), t("property.position.fixed"), t("property.position.sticky")],
                         subs: [
-                            { name: '层级', prop: 'z-index', type: 'slider', min: 0, max: 9999, unit: '' },
-                            { name: '上偏移', prop: 'top', type: 'slider', min: -500, max: 500, unit: 'px' },
-                            { name: '下偏移', prop: 'bottom', type: 'slider', min: -500, max: 500, unit: 'px' },
-                            { name: '左偏移', prop: 'left', type: 'slider', min: -500, max: 500, unit: 'px' },
-                            { name: '右偏移', prop: 'right', type: 'slider', min: -500, max: 500, unit: 'px' }
+                            { name: t("property.z-index"), prop: 'z-index', type: 'slider', min: 0, max: 9999, unit: '' },
+                            { name: t("property.top"), prop: 'top', type: 'slider', min: -500, max: 500, unit: 'px' },
+                            { name: t("property.bottom"), prop: 'bottom', type: 'slider', min: -500, max: 500, unit: 'px' },
+                            { name: t("property.left"), prop: 'left', type: 'slider', min: -500, max: 500, unit: 'px' },
+                            { name: t("property.right"), prop: 'right', type: 'slider', min: -500, max: 500, unit: 'px' }
                         ]
                     },
-                    { name: '滤镜&特效', prop: '', type: 'none',
+                    { name: t("property.filter"), prop: '', type: 'none',
                         subs: [
-                            { name: '阴影', default:'', role:'shorthand', prop: 'box-shadow', type: 'text',
+                            { name: t("property.box-shadow"), default:'', role:'shorthand', prop: 'box-shadow', type: 'text',
                                 subs: [
-                                    { name: '水平偏移', role:'part-1',default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px'},
-                                    { name: '垂直偏移', role:'part-2',default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px'},
-                                    { name: '模糊半径', role:'part-3',default: "0px", prop: '', type: 'slider', min: 0, max: 20, unit: 'px'},
-                                    { name: '阴影颜色', role:'part-4',default: "rgba(0, 0, 0, 0.5)", prop: '', type: 'color'},
+                                    { name: t("property.horizontal-offset"), role:'part-1',default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px'},
+                                    { name: t("property.vertical-offset"), role:'part-2',default: "0px", prop: '', type: 'slider', min: -20, max: 20, unit: 'px'},
+                                    { name: t("property.blur-radius"), role:'part-3',default: "0px", prop: '', type: 'slider', min: 0, max: 20, unit: 'px'},
+                                    { name: t("property.shadow-color"), role:'part-4',default: "rgba(0, 0, 0, 0.5)", prop: '', type: 'color'},
                                 ]
                             },
-                            { name: '前景', default:'', role:'functionalNotion', prop: 'filter', type: 'text' ,
+                            { name: t("property.filter.main"), default:'', role:'functionalNotion', prop: 'filter', type: 'text' ,
                                 subs: [
-                                    { name: '模糊',role:'part',default: "0px", prop: 'blur', type: 'slider', min: 0, max: 20, unit: 'px' },
-                                    { name: '亮度',role:'part',default: "100%", prop: 'brightness', type: 'slider', min: 0, max: 200, unit: '%' },
-                                    { name: '对比度',role:'part',default: "100%", prop: 'contrast', type: 'slider', min: 0, max: 200, unit: '%' },
-                                    { name: '灰度',role:'part',default: "0%", prop: 'grayscale', type: 'slider', min: 0, max: 100, unit: '%' },
-                                    { name: '反转',role:'part',default: "0%", prop: 'invert', type: 'slider', min: 0, max: 100, unit: '%' },
-                                    { name: '饱和度',role:'part',default: "100%", prop: 'saturate', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.blur"),role:'part',default: "0px", prop: 'blur', type: 'slider', min: 0, max: 20, unit: 'px' },
+                                    { name: t("property.brightness"),role:'part',default: "100%", prop: 'brightness', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.contrast"),role:'part',default: "100%", prop: 'contrast', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.grayscale"),role:'part',default: "0%", prop: 'grayscale', type: 'slider', min: 0, max: 100, unit: '%' },
+                                    { name: t("property.invert"),role:'part',default: "0%", prop: 'invert', type: 'slider', min: 0, max: 100, unit: '%' },
+                                    { name: t("property.saturate"),role:'part',default: "100%", prop: 'saturate', type:'slider', min: 0, max: 200, unit: '%' },
                                 ]
                             },
-                            { name: '背景', default:'', role:'functionalNotion', prop: 'backdrop-filter', type: 'text' ,
+                            { name: t("property.filter.background"), default:'', role:'functionalNotion', prop: 'backdrop-filter', type: 'text' ,
                                 subs: [
-                                    { name: '模糊',role:'part',default: "0px", prop: 'blur', type: 'slider', min: 0, max: 20, unit: 'px' },
-                                    { name: '亮度',role:'part',default: "100%", prop: 'brightness', type: 'slider', min: 0, max: 200, unit: '%' },
-                                    { name: '对比度',role:'part',default: "100%", prop: 'contrast', type: 'slider', min: 0, max: 200, unit: '%' },
-                                    { name: '灰度',role:'part',default: "0%", prop: 'grayscale', type: 'slider', min: 0, max: 100, unit: '%' },
-                                    { name: '反转',role:'part',default: "0%", prop: 'invert', type: 'slider', min: 0, max: 100, unit: '%' },
-                                    { name: '饱和度',role:'part',default: "100%", prop: 'saturate', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.blur"),role:'part',default: "0px", prop: 'blur', type: 'slider', min: 0, max: 20, unit: 'px' },
+                                    { name: t("property.brightness"),role:'part',default: "100%", prop: 'brightness', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.contrast"),role:'part',default: "100%", prop: 'contrast', type: 'slider', min: 0, max: 200, unit: '%' },
+                                    { name: t("property.grayscale"),role:'part',default: "0%", prop: 'grayscale', type: 'slider', min: 0, max: 100, unit: '%' },
+                                    { name: t("property.invert"),role:'part',default: "0%", prop: 'invert', type: 'slider', min: 0, max: 100, unit: '%' },
+                                    { name: t("property.saturate"),role:'part',default: "100%", prop: 'saturate', type:'slider', min: 0, max: 200, unit: '%' },
                                 ]
                             },
                         ]
                     },
-                    { name: '变换', prop: 'transform', type: 'text',
+                    { name: t("property.transform.name"), prop: 'transform', type: 'text',
                         subs: [
-                            { name: '旋转', prop: 'rotate', type: 'slider', min: -360, max: 360, unit: 'deg' },
-                            { name: '缩放', prop: 'scale', type: 'slider', min: 0.1, max: 3, step: 0.1, unit: '' },
-                            { name: '水平平移', prop: 'translateX', type: 'slider', min: -200, max: 200, unit: 'px' },
-                            { name: '垂直平移', prop: 'translateY', type: 'slider', min: -200, max: 200, unit: 'px' },
+                            { name: t("property.transform.rotate"), prop: 'rotate', type: 'slider', min: -360, max: 360, unit: 'deg' },
+                            { name: t("property.transform.scale"), prop: 'scale', type: 'slider', min: 0.1, max: 3, step: 0.1, unit: '' },
+                            { name: t("property.transform.translate-x"), prop: 'translateX', type: 'slider', min: -200, max: 200, unit: 'px' },
+                            { name: t("property.transform.translate-y"), prop: 'translateY', type: 'slider', min: -200, max: 200, unit: 'px' },
                         ]
                     }
                 ]
@@ -1364,16 +1373,8 @@ class CSSInspectorFloatingPanel{
         
         // 5. 底部操作栏
         const setting = new Setting(this.el)
-            
-            // .setName('查看选择器')
-            // .addToggle(toggle => toggle
-            //     .setValue(true) // 设置初始状态
-            //     .onChange(value => {
-            //         this.selectorInstance.toggleOverlays(value);
-            //     })
-            // )
-            .setName('覆盖权重')
-            .setTooltip('当多个样式作用于同一元素时，权重更高的样式会覆盖权重较低的样式。默认权重为1，数值越大优先级越高。')
+            .setName(t('action_bar.priority.name'))
+            .setTooltip(t('action_bar.priority.tooltip'))
             .setDesc('')
             .setClass('visual-ui-editor-weight-setting')
             .then(setting => {
@@ -1418,23 +1419,23 @@ class CSSInspectorFloatingPanel{
                             toggle
                             .setValue(this.isImportant) // 设置初始状态
                             const statusText = toggle.toggleEl.createEl('span', { 
-                                text: toggle.getValue() ? '强制' : '强制',
+                                text: t('action_bar.priority.force'),
                                 cls: 'visual-ui-editor-important-status-text'
                             });
                             
                             toggle.onChange(value => {
                                 this.isImportant = value;
-                                statusText.setText(value ? '强制' : '强制');
+                                statusText.setText(t('action_bar.priority.force'));
                                 statusText.classList.toggle('important', value);
                                 this.style = this.exportStyle(this.isImportant);
                                 if(this.style.endsWith("\t")) {
                                     this.style = this.style.slice(0, -1);
                                 }
                                 if(this.style === '') {
-                                    this.selectorHint.textContent = `[@selector]/ 点击复制选择器\n${this.selector}\n`;
+                                    this.selectorHint.textContent = t('preview.selector_hint');
                                 }
                                 else {
-                                    this.selectorHint.textContent = `[@css-preview]/ 点击复制css代码\n${this.selector}\n{\n\t${this.style}}`;
+                                    this.selectorHint.textContent = t('preview.css_hint', { selector: this.selector, css: this.style });
                                 }
                             });
                         }
@@ -1498,32 +1499,15 @@ class CSSInspectorFloatingPanel{
                         valueDisplay.classList.add('visual-ui-editor-visible');
                     }
                 });
-
-                // // 7. 添加重置按钮
-                // setting.addExtraButton(btn => btn
-                //     .setIcon('reset')
-                //     .setTooltip('重置权重')
-                //     .onClick(() => {
-                //         const defaultVal = 1;
-                //         currentWeight = defaultVal;
-                //         valueDisplay.textContent = String(defaultVal);
-                //         if (sliderInput) sliderInput.value = String(defaultVal);
-                //         this.priority = defaultVal;
-                //         // this.selectorInstance.updatePriority(defaultVal);
-                //     })
-                // );
             })
             
             .addButton(btn => btn
-                .setButtonText('抹除样式')
+                .setButtonText(t('action_bar.erase_styles.name'))
                 .setWarning()
-                .setTooltip('抹除所有该元素设置过的历史样式，恢复到未设置状态')
+                .setTooltip(t('action_bar.erase_styles.tooltip'))
                 .onClick(async () => {
                     //弹出确认框
-                    if(await ConfirmModal.confirm(this.app, '确定要抹除所有该元素设置过的 [历史] 样式吗？\n该元素将恢复为没有设置过任何样式的状态, 该操作无法撤销！')){
-                    // if(confirm('确定要抹除所有该元素设置过的 [历史] 样式吗？\n该元素将恢复为没有设置过任何样式的状态, 该操作无法撤销！')) {
-                    // window.confirm('确定要抹除所有该元素设置过的 [历史] 样式吗？\n该元素将恢复为没有设置过任何样式的状态, 该操作无法撤销！').then(async () => {
-                        //读取css文件，删除所有包含该选择器的样式
+                    if(await ConfirmModal.confirm(this.app, t('action_bar.erase_styles.confirm'))){
                         let needRefresh = false;
                         const snippetsPath = this.app.vault.configDir + '/snippets';
                         const tempName = `--ui-designer-${this.app.vault.getName()}-temp`;
@@ -1531,12 +1515,7 @@ class CSSInspectorFloatingPanel{
                         await this.app.vault.adapter.exists(tempFile).then(async exists => {
                             if (exists) {
                                 await this.app.vault.adapter.read(tempFile).then(async content => {
-                                    //匹配选择器及其样式块的正则表达式，支持多行和嵌套大括号
                                     const regex = new RegExp(`${this.selector}\\s*{[^{}]*}\n*`, 'g');
-                                    //检测有没有匹配项
-                                    
-                                    //匹配两行以及以上的空行，并替换为一行
-                                    
                                     if(regex.test(content)) {
                                         needRefresh = true;
                                         const newContent = content.replace(regex, '');
@@ -1567,7 +1546,7 @@ class CSSInspectorFloatingPanel{
                                 if (needRefresh) {
                                     await this.forceRefreshStyles();
 
-                                    new Notice('✅已抹除该元素的历史样式');
+                                    new Notice(t('action_bar.erase_styles.notice'));
                                     this.target_style = window.getComputedStyle(this.targetEl);
                                     this.previewEl.remove();
                                     this.previewEl = this.targetEl.cloneNode(true) as HTMLElement;
@@ -1584,7 +1563,7 @@ class CSSInspectorFloatingPanel{
                                     }
                                 }
                                 else {
-                                    new Notice('✅没有发现该元素的历史样式');
+                                    new Notice(t('action_bar.erase_styles.no_styles_notice'));
                                     elementPreviewContainer.appendChild(this.previewEl);
                                     // previewContainer.
                                 }
@@ -1596,16 +1575,14 @@ class CSSInspectorFloatingPanel{
                 })
             )
             .addButton(btn => btn
-            .setButtonText('重置')
-            .setTooltip('重置此次编辑的所有样式')
+            .setButtonText(t('action_bar.reset_styles.name'))
+            .setTooltip(t('action_bar.reset_styles.tooltip'))
             .onClick(async () => {
                 //弹出确认框
-                // new ConfirmModal(this.app, '确定要重置本次打开面板以来编辑的所有样式吗？历史样式将会保留', async () => {
-                //
-                if(await ConfirmModal.confirm(this.app, '确定要重置本次打开面板以来编辑的所有样式吗？历史样式将会保留')) {
+                if(await ConfirmModal.confirm(this.app, t('action_bar.reset_styles.confirm'))) {
                     this.attributeEditors.forEach(editor => editor.reset());
                     this.style = '';
-                    this.selectorHint.textContent = `[@selector]/ 点击复制选择器\n${this.selector}\n`;
+                    this.selectorHint.textContent = t('preview.selector_hint', { selector: this.selector });
                     //删除临时预览样式
                     const snippetsPath = this.app.vault.configDir + '/snippets';
                     const snippetName = `--ui-designer-${this.app.vault.getName()}-temp`;
@@ -1616,7 +1593,7 @@ class CSSInspectorFloatingPanel{
                                 // 刷新 Snippets 列表
                                 await this.forceRefreshStyles();
 
-                                new Notice('✅已重置本次编辑的样式');
+                                new Notice(t('action_bar.reset_styles.notice'));
                                 this.target_style = window.getComputedStyle(this.targetEl);
                                 this.attributeEditors.forEach(editor => {editor.rebind(this.target_style, this.previewEl)});
                                 this.previewEl.remove();
@@ -1631,8 +1608,8 @@ class CSSInspectorFloatingPanel{
 
 
             .addButton(btn => btn
-            .setButtonText('文档预览')
-            .setTooltip('将当前样式直接应用到文档中进行预览（刷新或关闭窗口后失效）')
+            .setButtonText(t('action_bar.preview.name'))
+            .setTooltip(t('action_bar.preview.tooltip'))
             .onClick(async () => {
                 const css = this.exportCSS(this.priority, this.isImportant);
                 // 获取 snippets 文件夹路径
@@ -1664,12 +1641,12 @@ class CSSInspectorFloatingPanel{
                     await customCss.setCssEnabledStatus(snippetName, true);
                 }
                 // customCss.setCssEnabledStatus(snippetName, true)
-                new Notice('已应用✅\n临时css文件路径: ' + snippetFile);
+                new Notice(t('action_bar.preview.notice', { filePath: snippetFile }));
             }))
 
             .addButton(btn => btn
-            .setButtonText('保存')
-            .setTooltip('将样式永久保存')
+            .setButtonText(t('action_bar.save_styles.name'))
+            .setTooltip(t('action_bar.save_styles.tooltip'))
             .setWarning()
             .onClick(async () => {
                 const css = this.exportCSS(this.priority, this.isImportant);
@@ -1709,7 +1686,7 @@ class CSSInspectorFloatingPanel{
                     await customCss.setCssEnabledStatus(snippetName, true);
                 }
                 // customCss.setCssEnabledStatus(snippetName, true)
-                new Notice('已保存✅\ncss文件路径: ' + snippetFile);
+                new Notice(t('action_bar.save_styles.notice', { filePath: snippetFile }));
                 const tempName = `--ui-designer-${this.app.vault.getName()}-temp`;
                 const tempFile = `${snippetsPath}/${tempName}.css`;
                 await this.app.vault.adapter.exists(tempFile).then(async exists => {
@@ -1753,7 +1730,7 @@ class CSSInspectorFloatingPanel{
             }
 
            
-            if(await ConfirmModal.confirm(this.app,'确定要关闭预览面板吗？未保存的样式将会丢失！')) {
+            if(await ConfirmModal.confirm(this.app,t('close.confirm'))) {
                 //删除临时预览样式
                 const snippetsPath = this.app.vault.configDir + '/snippets';
                 const snippetName = `--ui-designer-${this.app.vault.getName()}-temp`;
@@ -1818,8 +1795,8 @@ class MultiSelectorInstance {
 
     private setupListeners() {
         document.addEventListener('mousemove', this.onMouseMove, true);
-        document.addEventListener('click', this.onClick, {capture: true});
-
+        document.addEventListener('mousedown', this.onMouseDown, {capture: true});
+        document.addEventListener('scroll', this.onScroll, true);
         this.updateInterval = window.setInterval(() => {
             if(this.showOverlays) {
                 this.update();
@@ -1958,7 +1935,7 @@ class MultiSelectorInstance {
                 this.createOverlayFor(target as HTMLElement);
             });
         }        catch (err) {
-            console.error('生成选择器失败:', err);
+            console.error(t('console.generate_selector_failed'), err);
         }
     };
 
@@ -2025,7 +2002,14 @@ class MultiSelectorInstance {
         this.overlays = [];
     }
 
-    private onClick = (e: MouseEvent) => {
+    private onScroll = () => {
+        if(this.frozen) return;
+        if(this.showOverlays) {
+            this.update();
+        }
+    }
+
+    private onMouseDown = (e: MouseEvent) => {
         if(this.frozen) return; // 如果已经冻结，说明编辑器弹窗已打开，不再响应点击事件
         this.toggleOverlays(false); // 关闭覆盖层显示，避免干扰编辑器操作
         e.preventDefault();
@@ -2039,7 +2023,7 @@ class MultiSelectorInstance {
 
     private destroy() {
         document.removeEventListener('mousemove', this.onMouseMove, true);
-        document.removeEventListener('click', this.onClick, true);
+        document.removeEventListener('mousedown', this.onMouseDown, true);
         if (this.updateInterval) {
             window.clearInterval(this.updateInterval);
         }
